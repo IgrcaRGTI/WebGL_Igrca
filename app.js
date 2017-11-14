@@ -1,4 +1,7 @@
 'use strict';
+/**
+ * Globalne spremenljivke 
+ */
 
 var Demo;
 /*
@@ -27,3 +30,4 @@ function Init() {
 		}
 	});
 }
+

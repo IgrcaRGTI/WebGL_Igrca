@@ -1,10 +1,39 @@
 'use strict';
-
+/*
+Informacija za font
+*/
+var fontInfo =
+    {
+        letterHeight: 8,
+        spaceWidth: 8,
+        spacing: -1,
+        textureWidth: 64,
+        textrueHeight: 40,
+        glyphInfos:
+        {
+            '0': { x: 16, y: 24, width: 8, },
+            '1': { x: 24, y: 24, width: 8, },
+            '2': { x: 32, y: 24, width: 8, },
+            '3': { x: 40, y: 24, width: 8, },
+            '4': { x: 48, y: 24, width: 8, },
+            '5': { x: 56, y: 24, width: 8, },
+            '6': { x: 0, y: 32, width: 8, },
+            '7': { x: 8, y: 32, width: 8, },
+            '8': { x: 16, y: 32, width: 8, },
+            '9': { x: 24, y: 32, width: 8, },
+            '-': { x: 32, y: 32, width: 8, },
+            '*': { x: 40, y: 32, width: 8, },
+            '!': { x: 48, y: 32, width: 8, },
+            '?': { x: 56, y: 32, width: 8, },
+        }
+    };
+var canvasTexture;
 /*
 *
 *Deklaracija za modele, objekt se uporablja v LightMapDemoScene
 *
 */
+
 var Model = function (gl, vertices, indices, normals, color) {
 	this.vbo = gl.createBuffer();
 	this.ibo = gl.createBuffer();
@@ -26,6 +55,33 @@ var Model = function (gl, vertices, indices, normals, color) {
 	gl.bindBuffer(gl.ARRAY_BUFFER, null);
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 };
+//Inicializacija texta
+
+function initTextures()
+{
+    canvasTexture = gl.createTexture();
+    handleLoadedTexture(canvasTexture, document.getElementById("gl-surface"));
+}
+function handleLoadedTexture(texture, textureCanvas) {
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    gl.Image2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, textureCanvas);
+    gl.textParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.textParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
+    gl.generateMipmap(gl.TEXTURE_2D);
+    gl.bindTexture(gl.TEXTURE_2D, null);
+}
+
+
+
+
+
+
+
+
+
+
+
 
 var CreateShaderProgram = function (gl, vsText, fsText) {
 	var vs = gl.createShader(gl.VERTEX_SHADER);

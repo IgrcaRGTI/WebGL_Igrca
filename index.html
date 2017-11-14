@@ -1,25 +1,58 @@
 <!DOCTYPE html>
 <html>
-<head>
-	<style>
-		body canvas {
-			margin: 0;
-			padding: 0;
-			position: absolute;
-		}
-	</style>
-	<title>Room</title>
-</head>
-<body onload="Init();">
-<canvas id="gl-surface">
-	Get a <a href="http://chrome.google.com"></a>
-</canvas>
-<script src="bower_components/async/dist/async.min.js"></script>
-<script src="bower_components/gl-matrix/dist/gl-matrix-min.js"></script>
+    <head>
+        <title>Room</title>
+	    <style>
+		    body canvas {
+			    margin: 0;
+			    padding: 0;
+			    position: absolute;
+		    }
+            p {color:white;}
+            
+	    </style>
+        <!-- Skripte bi imo bolje bilo imeti v headu     -->
+        <script src="bower_components/async/dist/async.min.js" type="text/javascript"></script>
+        <script src="bower_components/gl-matrix/dist/gl-matrix-min.js" type="text/javascript"></script>
+        <script src="GameLogic.js" type="text/javascript"></script>
+        <script src="app.js" type="text/javascript"></script>
+        <script src="util.js" type="text/javascript"></script>
+        <script src="Models.js" type="text/javascript"></script>
+        <script src="LightMapDemoScene.js" type="text/javascript"></script>
+        <!--Lokalna skripta - po potrebi izbris-->
+        <script>
+            //spremenljivke
+            var canvas, ctx;
+            //funkcije
+            setInterval(function Canvas() {
+                //vsako sekundo kreiramo texturo za doloèen objekt
+                canvas = document.getElementById("gl-surface");
+                ctx = canvas.canvas.getContex("2d");
+                ctx.fillStyle = "#333";
+                ctx.textAlign = "left";
+                ctx.textBaseline = "middle";
+                ctx.font = "7px monospace";
+                if (document.getElementById("t").innerText != "") {
+                    ctx.fillText(document.getElementById("t").innerText, canvas.width / 2, canvas.height / 2);
+                    
 
-<script src="app.js"></script>
-<script src="util.js"></script>
-<script src="Models.js"></script>
-<script src="LightMapDemoScene.js"></script>
+
+
+                }
+                }, 1000);
+            
+        </script>
+
+  
+   
+</head>
+<body id="body" onload="Init();CountDown();Canvas();">
+<canvas id="gl-surface">
+  Najdite si dostojen browser, kot sta na primer Firefox ali Chrome!
+	
+</canvas>
+    <p id="t"></p>
+
+
 </body>
 </html>
