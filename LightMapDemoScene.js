@@ -8,14 +8,18 @@ var LightMapDemoScene = function (gl) {
 
 LightMapDemoScene.prototype.Load = function (cb) {
 
+
 /*
 * var me, samo zato da ni treba skos pisat this
 *
 */
+
 	var me = this;
+
 /*
 * Nalaganje modelov, RoomModel = deklaracija prostora
 */
+
 	async.parallel({
 		Models: function (callback) {
 			async.map({
@@ -25,7 +29,11 @@ LightMapDemoScene.prototype.Load = function (cb) {
 		ShaderCode: function (callback) {
 			async.map({
 				'NoShadow_VSText': 'shaders/NoShadow.vs.glsl',
-				'NoShadow_FSText': 'shaders/NoShadow.fs.glsl'
+				'NoShadow_FSText': 'shaders/NoShadow.fs.glsl',
+				'Shadow_VSText': 'shaders/Shadow.vs.glsl',
+				'Shadow_FSText': 'shaders/Shadow.fs.glsl',
+				'ShadowMapGen_VSText': 'shaders/ShadowMapGen.vs.glsl',
+				'ShadowMapGen_FSText': 'shaders/ShadowMapGen.fs.glsl'
 			}, LoadTextResource, callback);
 		}
 	}, function (loadErrors, loadResults) {
@@ -33,7 +41,6 @@ LightMapDemoScene.prototype.Load = function (cb) {
 			cb(loadErrors);
 			return;
 		}
-
 /*
 * Nalaganje modelov iz funkcije, ki se nahajajo v RoomModel( for zanka se
 * sprehodi skozi modele v nekem j.sonu), v tem primeru so manual notr vneseni
@@ -51,14 +58,14 @@ LightMapDemoScene.prototype.Load = function (cb) {
 						mesh.normals,
 						vec4.fromValues(0.8, 0.8, 1.0, 1.0)
 					);
-					  mat4.translate(
-						me.MonkeyMesh.world, me.MonkeyMesh.world,
-						vec4.fromValues(2.07919, -0.98559, 1.75740)
-					);
 					mat4.rotate(
 						me.MonkeyMesh.world, me.MonkeyMesh.world,
 						glMatrix.toRadian(94.87),
 						vec3.fromValues(0, 0, -1)
+					);
+					mat4.translate(
+						me.MonkeyMesh.world, me.MonkeyMesh.world,
+						vec4.fromValues(2.07919, -0.98559, 1.75740)
 					);
 					break;
 				case 'TableMesh':
@@ -123,12 +130,31 @@ LightMapDemoScene.prototype.Load = function (cb) {
 			me.WallsMesh
 		];
 
+/*
+** Ustvarjanje Shaderjov
+*/
 		me.NoShadowProgram = CreateShaderProgram(
 			me.gl, loadResults.ShaderCode.NoShadow_VSText,
 			loadResults.ShaderCode.NoShadow_FSText
 		);
 		if (me.NoShadowProgram.error) {
-			cb(me.NoShadowProgram.error); return;
+			cb('NoShadowProgram ' + me.NoShadowProgram.error); return;
+		}
+
+		me.ShadowProgram = CreateShaderProgram(
+			me.gl, loadResults.ShaderCode.Shadow_VSText,
+			loadResults.ShaderCode.Shadow_FSText
+		);
+		if (me.ShadowProgram.error) {
+			cb('ShadowProgram ' + me.ShadowProgram.error); return;
+		}
+
+		me.ShadowMapGenProgram = CreateShaderProgram(
+			me.gl, loadResults.ShaderCode.ShadowMapGen_VSText,
+			loadResults.ShaderCode.ShadowMapGen_FSText
+		);
+		if (me.ShadowMapGenProgram.error) {
+			cb('ShadowMapGenProgram ' + me.ShadowMapGenProgram.error); return;
 		}
 
 		me.NoShadowProgram.uniforms = {
@@ -143,6 +169,63 @@ LightMapDemoScene.prototype.Load = function (cb) {
 			vPos: me.gl.getAttribLocation(me.NoShadowProgram, 'vPos'),
 			vNorm: me.gl.getAttribLocation(me.NoShadowProgram, 'vNorm'),
 		};
+
+		me.ShadowProgram.uniforms = {
+			mProj: me.gl.getUniformLocation(me.ShadowProgram, 'mProj'),
+			mView: me.gl.getUniformLocation(me.ShadowProgram, 'mView'),
+			mWorld: me.gl.getUniformLocation(me.ShadowProgram, 'mWorld'),
+
+			pointLightPosition: me.gl.getUniformLocation(me.ShadowProgram, 'pointLightPosition'),
+			meshColor: me.gl.getUniformLocation(me.ShadowProgram, 'meshColor'),
+			lightShadowMap: me.gl.getUniformLocation(me.ShadowProgram, 'lightShadowMap'),
+			shadowClipNearFar: me.gl.getUniformLocation(me.ShadowProgram, 'shadowClipNearFar'),
+		};
+		me.ShadowProgram.attribs = {
+			vPos: me.gl.getAttribLocation(me.ShadowProgram, 'vPos'),
+			vNorm: me.gl.getAttribLocation(me.ShadowProgram, 'vNorm'),
+		};
+
+		me.ShadowMapGenProgram.uniforms = {
+			mProj: me.gl.getUniformLocation(me.ShadowMapGenProgram, 'mProj'),
+			mView: me.gl.getUniformLocation(me.ShadowMapGenProgram, 'mView'),
+			mWorld: me.gl.getUniformLocation(me.ShadowMapGenProgram, 'mWorld'),
+
+			pointLightPosition: me.gl.getUniformLocation(me.ShadowMapGenProgram, 'pointLightPosition'),
+			shadowClipNearFar: me.gl.getUniformLocation(me.ShadowMapGenProgram, 'shadowClipNearFar'),
+		};
+		me.ShadowMapGenProgram.attribs = {
+			vPos: me.gl.getAttribLocation(me.ShadowMapGenProgram, 'vPos'),
+		};
+
+		me.shadowMapCube = me.gl.createTexture();
+		me.gl.bindTexture(me.gl.TEXTURE_CUBE_MAP, me.shadowMapCube);
+		me.gl.texParameteri(me.gl.TEXTURE_CUBE_MAP, me.gl.TEXTURE_MIN_FILTER, me.gl.LINEAR);
+		me.gl.texParameteri(me.gl.TEXTURE_CUBE_MAP, me.gl.TEXTURE_MAG_FILTER, me.gl.LINEAR);
+		me.gl.texParameteri(me.gl.TEXTURE_CUBE_MAP, me.gl.TEXTURE_WRAP_S, me.gl.MIRRORED_REPEAT);
+		me.gl.texParameteri(me.gl.TEXTURE_CUBE_MAP, me.gl.TEXTURE_WRAP_T, me.gl.MIRRORED_REPEAT);
+		for (var i = 0; i < 6; i++) {
+			me.gl.texImage2D(
+				me.gl.TEXTURE_CUBE_MAP_POSITIVE_X + i,
+				0, me.gl.RGBA,
+				me.textureSize, me.textureSize,
+				0, me.gl.RGBA,
+				me.gl.UNSIGNED_BYTE, null
+			);
+		}
+
+		me.shadowMapFramebuffer = me.gl.createFramebuffer();
+		me.gl.bindFramebuffer(me.gl.FRAMEBUFFER, me.shadowMapFramebuffer);
+
+		me.shadowMapRenderbuffer = me.gl.createRenderbuffer();
+		me.gl.bindRenderbuffer(me.gl.RENDERBUFFER, me.shadowMapRenderbuffer);
+		me.gl.renderbufferStorage(
+			me.gl.RENDERBUFFER, me.gl.DEPTH_COMPONENT16,
+			me.textureSize, me.textureSize
+		);
+
+		me.gl.bindTexture(me.gl.TEXTURE_CUBE_MAP, null);
+		me.gl.bindRenderbuffer(me.gl.RENDERBUFFER, null);
+		me.gl.bindFramebuffer(me.gl.FRAMEBUFFER, null);
 
 /*
 *
@@ -166,6 +249,77 @@ LightMapDemoScene.prototype.Load = function (cb) {
 			85.0
 		);
 
+		me.shadowMapCameras = [
+/*
+* Pozitiven X
+*/
+			new Camera(
+				me.lightPosition,
+				vec3.add(vec3.create(), me.lightPosition, vec3.fromValues(1, 0, 0)),
+				vec3.fromValues(0, -1, 0)
+			),
+/*
+* Negativen X
+*/
+			new Camera(
+				me.lightPosition,
+				vec3.add(vec3.create(), me.lightPosition, vec3.fromValues(-1, 0, 0)),
+				vec3.fromValues(0, -1, 0)
+			),
+/*
+* Pozitiven Y
+*/
+			new Camera(
+				me.lightPosition,
+				vec3.add(vec3.create(), me.lightPosition, vec3.fromValues(0, 1, 0)),
+				vec3.fromValues(0, 0, 1)
+			),
+/*
+* Negativen Y
+*/
+
+			new Camera(
+				me.lightPosition,
+				vec3.add(vec3.create(), me.lightPosition, vec3.fromValues(0, -1, 0)),
+				vec3.fromValues(0, 0, -1)
+			),
+/*
+* Pozitiven z
+*/
+
+			new Camera(
+				me.lightPosition,
+				vec3.add(vec3.create(), me.lightPosition, vec3.fromValues(0, 0, 1)),
+				vec3.fromValues(0, -1, 0)
+			),
+/*
+* Negativen Z
+*/
+
+			new Camera(
+				me.lightPosition,
+				vec3.add(vec3.create(), me.lightPosition, vec3.fromValues(0, 0, -1)),
+				vec3.fromValues(0, -1, 0)
+			),
+		];
+		me.shadowMapViewMatrices = [
+			mat4.create(),
+			mat4.create(),
+			mat4.create(),
+			mat4.create(),
+			mat4.create(),
+			mat4.create()
+		];
+		me.shadowMapProj = mat4.create();
+		me.shadowClipNearFar = vec2.fromValues(0.05, 15.0);
+		mat4.perspective(
+			me.shadowMapProj,
+			glMatrix.toRadian(90),
+			1.0,
+			me.shadowClipNearFar[0],
+			me.shadowClipNearFar[1]
+		);
+
 		cb();
 	});
 
@@ -183,6 +337,9 @@ LightMapDemoScene.prototype.Load = function (cb) {
 
 	me.MoveForwardSpeed = 3.5;
 	me.RotateSpeed = 1.5;
+	me.textureSize = getParameterByName('texSize') || 512;
+
+	me.lightDisplacementInputAngle = 0.0;
 };
 
 LightMapDemoScene.prototype.Unload = function () {
@@ -193,22 +350,34 @@ LightMapDemoScene.prototype.Unload = function () {
 	this.WallsMesh = null;
 
 	this.NoShadowProgram = null;
+	this.ShadowProgram = null;
+	this.ShadowMapGenProgram = null;
 
 	this.camera = null;
 	this.lightPosition = null;
 
 	this.Meshes = null;
 
-	me.PressedKeys = null;
+	this.PressedKeys = null;
 
-	me.MoveForwardSpeed = null;
-	me.RotateSpeed = null;
+	this.MoveForwardSpeed = null;
+	this.RotateSpeed = null;
+
+	this.shadowMapCube = null;
+	this.textureSize = null;
+
+	this.shadowMapCameras = null;
+	this.shadowMapViewMatrices = null;
 };
 
 LightMapDemoScene.prototype.Begin = function () {
 
 
 	var me = this;
+
+/*
+* Eventi
+*/
 
 	this.__ResizeWindowListener = this._OnResizeWindow.bind(this);
 	this.__KeyDownWindowListener = this._OnKeyDown.bind(this);
@@ -230,6 +399,7 @@ LightMapDemoScene.prototype.Begin = function () {
 		me._Update(dt);
 		previousFrame = currentFrameTime;
 
+		me._GenerateShadowMap();
 		me._Render();
 		me.nextFrameHandle = requestAnimationFrame(loop);
 	};
@@ -271,11 +441,11 @@ LightMapDemoScene.prototype._Update = function (dt) {
 	}
 
 	if (this.PressedKeys.Right && !this.PressedKeys.Left) {
-		this.camera.moveRight(dt / 1000 * this.MoveForwardSpeed);
+		this.camera.moveRight(dt / 800 * this.MoveForwardSpeed);
 	}
 
 	if (this.PressedKeys.Left && !this.PressedKeys.Right) {
-		this.camera.moveRight(-dt / 1000 * this.MoveForwardSpeed);
+		this.camera.moveRight(-dt / 800* this.MoveForwardSpeed);
 	}
 
 	if (this.PressedKeys.Up && !this.PressedKeys.Down) {
@@ -287,14 +457,105 @@ LightMapDemoScene.prototype._Update = function (dt) {
 	}
 
 	if (this.PressedKeys.RotRight && !this.PressedKeys.RotLeft) {
-		this.camera.rotateRight(-dt / 800 * this.RotateSpeed);
+		this.camera.rotateRight(-dt / 1000 * this.RotateSpeed);
 	}
 
 	if (this.PressedKeys.RotLeft && !this.PressedKeys.RotRight) {
-		this.camera.rotateRight(dt / 800 * this.RotateSpeed);
+		this.camera.rotateRight(dt / 1000 * this.RotateSpeed);
 	}
 
+	this.lightDisplacementInputAngle += dt / 2337;
+
+
 	this.camera.GetViewMatrix(this.viewMatrix);
+};
+
+LightMapDemoScene.prototype._GenerateShadowMap = function () {
+	var gl = this.gl;
+
+
+	gl.useProgram(this.ShadowMapGenProgram);
+	gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.shadowMapCube);
+	gl.bindFramebuffer(gl.FRAMEBUFFER, this.shadowMapFramebuffer);
+	gl.bindRenderbuffer(gl.RENDERBUFFER, this.shadowMapRenderbuffer);
+
+	gl.viewport(0, 0, this.textureSize, this.textureSize);
+	gl.enable(gl.DEPTH_TEST);
+	gl.enable(gl.CULL_FACE);
+
+
+	gl.uniform2fv(
+		this.ShadowMapGenProgram.uniforms.shadowClipNearFar,
+		this.shadowClipNearFar
+	);
+	gl.uniform3fv(
+		this.ShadowMapGenProgram.uniforms.pointLightPosition,
+		this.lightPosition
+	);
+	gl.uniformMatrix4fv(
+		this.ShadowMapGenProgram.uniforms.mProj,
+		gl.FALSE,
+		this.shadowMapProj
+	);
+
+	for (var i = 0; i < this.shadowMapCameras.length; i++) {
+
+		gl.uniformMatrix4fv(
+			this.ShadowMapGenProgram.uniforms.mView,
+			gl.FALSE,
+			this.shadowMapCameras[i].GetViewMatrix(this.shadowMapViewMatrices[i])
+		);
+
+
+		gl.framebufferTexture2D(
+			gl.FRAMEBUFFER,
+			gl.COLOR_ATTACHMENT0,
+			gl.TEXTURE_CUBE_MAP_POSITIVE_X + i,
+			this.shadowMapCube,
+			0
+		);
+		gl.framebufferRenderbuffer(
+			gl.FRAMEBUFFER,
+			gl.DEPTH_ATTACHMENT,
+			gl.RENDERBUFFER,
+			this.shadowMapRenderbuffer
+		);
+
+		gl.clearColor(0, 0, 0, 1);
+		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+/*
+*
+* Risanje modelov(mesh)
+*
+*/
+		for (var j = 0; j < this.Meshes.length; j++) {
+
+			gl.uniformMatrix4fv(
+				this.ShadowMapGenProgram.uniforms.mWorld,
+				gl.FALSE,
+				this.Meshes[j].world
+			);
+
+			gl.bindBuffer(gl.ARRAY_BUFFER, this.Meshes[j].vbo);
+			gl.vertexAttribPointer(
+				this.ShadowMapGenProgram.attribs.vPos,
+				3, gl.FLOAT, gl.FALSE,
+				0, 0
+			);
+			gl.enableVertexAttribArray(this.ShadowMapGenProgram.attribs.vPos);
+
+			gl.bindBuffer(gl.ARRAY_BUFFER, null);
+
+			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.Meshes[j].ibo);
+			gl.drawElements(gl.TRIANGLES, this.Meshes[j].nPoints, gl.UNSIGNED_SHORT, 0);
+			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
+		}
+	}
+
+	gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+	gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+	gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
 };
 
 LightMapDemoScene.prototype._Render = function () {
@@ -304,13 +565,19 @@ LightMapDemoScene.prototype._Render = function () {
 	gl.enable(gl.CULL_FACE);
 	gl.enable(gl.DEPTH_TEST);
 
+	gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
 	gl.clearColor(0, 0, 0, 1);
 	gl.clear(gl.DEPTH_BUFFER_BIT | gl.COLOR_BUFFER_BIT);
 
-	gl.useProgram(this.NoShadowProgram);
-	gl.uniformMatrix4fv(this.NoShadowProgram.uniforms.mProj, gl.FALSE, this.projMatrix);
-	gl.uniformMatrix4fv(this.NoShadowProgram.uniforms.mView, gl.FALSE, this.viewMatrix);
-	gl.uniform3fv(this.NoShadowProgram.uniforms.pointLightPosition, this.lightPosition);
+	gl.useProgram(this.ShadowProgram);
+	gl.uniformMatrix4fv(this.ShadowProgram.uniforms.mProj, gl.FALSE, this.projMatrix);
+	gl.uniformMatrix4fv(this.ShadowProgram.uniforms.mView, gl.FALSE, this.viewMatrix);
+	gl.uniform3fv(this.ShadowProgram.uniforms.pointLightPosition, this.lightPosition);
+	gl.uniform2fv(this.ShadowProgram.uniforms.shadowClipNearFar, this.shadowClipNearFar);
+	gl.uniform1i(this.ShadowProgram.uniforms.lightShadowMap, 0);
+	gl.activeTexture(gl.TEXTURE0);
+	gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.shadowMapCube);
 
 /*
 *
@@ -320,31 +587,31 @@ LightMapDemoScene.prototype._Render = function () {
 	for (var i = 0; i < this.Meshes.length; i++) {
 		// Per object uniforms
 		gl.uniformMatrix4fv(
-			this.NoShadowProgram.uniforms.mWorld,
+			this.ShadowProgram.uniforms.mWorld,
 			gl.FALSE,
 			this.Meshes[i].world
 		);
 		gl.uniform4fv(
-			this.NoShadowProgram.uniforms.meshColor,
+			this.ShadowProgram.uniforms.meshColor,
 			this.Meshes[i].color
 		);
 
-		// Set attributes
+
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.Meshes[i].vbo);
 		gl.vertexAttribPointer(
-			this.NoShadowProgram.attribs.vPos,
+			this.ShadowProgram.attribs.vPos,
 			3, gl.FLOAT, gl.FALSE,
 			0, 0
 		);
-		gl.enableVertexAttribArray(this.NoShadowProgram.attribs.vPos);
+		gl.enableVertexAttribArray(this.ShadowProgram.attribs.vPos);
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.Meshes[i].nbo);
 		gl.vertexAttribPointer(
-			this.NoShadowProgram.attribs.vNorm,
+			this.ShadowProgram.attribs.vNorm,
 			3, gl.FLOAT, gl.FALSE,
 			0, 0
 		);
-		gl.enableVertexAttribArray(this.NoShadowProgram.attribs.vNorm);
+		gl.enableVertexAttribArray(this.ShadowProgram.attribs.vNorm);
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, null);
 
@@ -362,11 +629,13 @@ LightMapDemoScene.prototype._OnResizeWindow = function () {
 	var targetHeight = window.innerWidth * 9 / 16;
 
 	if (window.innerHeight > targetHeight) {
+		// Center vertically
 		gl.canvas.width = window.innerWidth;
 		gl.canvas.height = targetHeight;
 		gl.canvas.style.left = '0';
 		gl.canvas.style.top = (window.innerHeight - targetHeight) / 2 + 'px';
 	} else {
+		// Center horizontally
 		gl.canvas.width = (window.innerHeight) * 16 / 9;
 		gl.canvas.height = window.innerHeight;
 		gl.canvas.style.left = (window.innerWidth - (gl.canvas.width)) / 2 + 'px';
