@@ -340,6 +340,9 @@ LightMapDemoScene.prototype.Load = function (cb) {
 	me.textureSize = getParameterByName('texSize') || 512;
 
 	me.lightDisplacementInputAngle = 0.0;
+
+	//Ustvarjanje ugank -- funkcija v GameLogic
+	initMisteries();
 };
 
 LightMapDemoScene.prototype.Unload = function () {

@@ -7,9 +7,44 @@
 			    margin: 0;
 			    padding: 0;
 			    position: absolute;
+                z-index: 0;
 		    }
             p {color:white;}
-            
+            .mistery {
+                display: none;
+                z-index: 20;
+                background-color: black;
+                position:absolute;
+                width: 50%;
+                height: 40%;
+                margin-left: auto;
+	            margin-right: auto;
+                left: 0;
+	            right: 0;
+	            top: 30%;
+            }
+            .question {
+                color: white;
+                text-align: center;
+                font-size: 4vh;
+            }
+            .input{
+                margin-left: 5%;
+                width: 70%;
+                font-size: 4vh;
+            }
+            .button{
+                width: 20%;
+                font-size: 4vh;
+            }
+            .x{
+                float: right;
+                margin-right: 2%;
+            }
+            #correct{
+                text-align: center;
+                font-size: 4vh;
+            }
 	    </style>
         <!-- Skripte bi imo bolje bilo imeti v headu     -->
         <script src="bower_components/async/dist/async.min.js" type="text/javascript"></script>
@@ -25,7 +60,7 @@
             var canvas, ctx;
             //funkcije
             setInterval(function Canvas() {
-                //vsako sekundo kreiramo texturo za doloèen objekt
+                //vsako sekundo kreiramo texturo za doloï¿½en objekt
                 canvas = document.getElementById("gl-surface");
                 ctx = canvas.canvas.getContex("2d");
                 ctx.fillStyle = "#333";
@@ -51,7 +86,29 @@
   Najdite si dostojen browser, kot sta na primer Firefox ali Chrome!
 	
 </canvas>
+
+<!-- 
+    Div za uganko
+-->
+<input type="submit" value="1. uganka" onclick="mistery=misteries[0]; mistery.open();">
+<input type="submit" value="2. uganka" onclick="mistery=misteries[1]; mistery.open();">
     <p id="t"></p>
+
+    <div id="mistery" class="mistery">
+        <div style="height: 100%, width: 100%;">
+            <input type="submit" value="X" class="x" onclick="mistery.close()">
+            <div  class="question">
+                <h1 id="question"></h1>
+            </div>
+            <div id="forma">
+                <input type="text" class="input" id="answer">
+                <input type="submit" value="Ok" class="button" onclick="mistery.check()">
+            </div>
+            <div>
+                <p id="correct"></p>
+            </div>
+        </div>
+    </div>
 
 
 </body>
