@@ -1,115 +1,86 @@
-<!DOCTYPE html>
-<html>
+﻿<!DOCTYPE html>
+<html lang="sl">
     <head>
-        <title>Room</title>
+      <title>Room</title>
+      <meta charset="UTF-8"/>
 	    <style>
-		    body canvas {
-			    margin: 0;
-			    padding: 0;
-			    position: absolute;
-                z-index: 0;
-		    }
-            p {color:white;}
-            .mystery {
-                display: none;
-                z-index: 20;
-                background-color: black;
-                position:absolute;
-                width: 50%;
-                height: 40%;
-                margin-left: auto;
-	            margin-right: auto;
-                left: 0;
-	            right: 0;
-	            top: 30%;
+		      #kontejner 
+                     { 
+                      position: relative;
+                     }
+          #kontejner canvas, #t
+                     {
+                        position: absolute;
+                     }
+            #t {
+                top: 10px;
+                left: 10px;
+                background: rgba(215, 44, 44, 0);
             }
-            .question {
-                color: white;
-                text-align: center;
-                font-size: 4vh;
-            }
-            .input{
-                margin-left: 5%;
-                width: 70%;
-                font-size: 4vh;
-            }
-            .button{
-                width: 20%;
-                font-size: 4vh;
-            }
-            .x{
-                float: right;
-                margin-right: 2%;
-            }
-            #correct{
-                text-align: center;
-                font-size: 4vh;
-            }
-	    </style>
+            #paragraph {display:none;}
+      
+      </style>
         <!-- Skripte bi imo bolje bilo imeti v headu     -->
+
         <script src="bower_components/async/dist/async.min.js" type="text/javascript"></script>
         <script src="bower_components/gl-matrix/dist/gl-matrix-min.js" type="text/javascript"></script>
+        <!--- collision detection-->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r71/three.min.js" text="text/javascript"></script>
         <script src="GameLogic.js" type="text/javascript"></script>
+        <script src="Collision.js" type="text/javascript"></script>
         <script src="app.js" type="text/javascript"></script>
         <script src="util.js" type="text/javascript"></script>
         <script src="Models.js" type="text/javascript"></script>
         <script src="LightMapDemoScene.js" type="text/javascript"></script>
         <!--Lokalna skripta - po potrebi izbris-->
         <script>
-            //spremenljivke
-            var canvas, ctx;
-            //funkcije
-            setInterval(function Canvas() {
-                //vsako sekundo kreiramo texturo za dolo�en objekt
-                canvas = document.getElementById("gl-surface");
-                ctx = canvas.canvas.getContex("2d");
-                ctx.fillStyle = "#333";
-                ctx.textAlign = "left";
-                ctx.textBaseline = "middle";
-                ctx.font = "7px monospace";
-                if (document.getElementById("t").innerText != "") {
-                    ctx.fillText(document.getElementById("t").innerText, canvas.width / 2, canvas.height / 2);
-                    
+            setInterval(
 
+                function timer() {
+                    var p = document.getElementById("paragraph");
 
+                    if (p != null)
+                    {
+                     
+                        var second_canvas = document.getElementById("t");
+                        
+                        if (second_canvas != null)
+                        {
+                            ctx = second_canvas.getContext('2d');
+                            ctx.clearRect(0, 0, second_canvas.width, second_canvas.height);
+                            ctx.font = "20px Georgia";
+                            ctx.fillText(p.innerText, (second_canvas.width / 2) - 17, (second_canvas.height / 2) + 8);
+                        }
+                    }
+                },100);
 
-                }
-                }, 1000);
-            
         </script>
 
-  
-   
 </head>
-<body id="body" onload="Init();CountDown();Canvas();">
-<canvas id="gl-surface">
-  Najdite si dostojen browser, kot sta na primer Firefox ali Chrome!
-	
-</canvas>
-
-<!-- 
-    Div za uganko
--->
-<input type="submit" value="1. uganka" onclick="mystery=mysteries[0]; mystery.open();">
-<input type="submit" value="2. uganka" onclick="mystery=mysteries[1]; mystery.open();">
-    <p id="t"></p>
-
-    <div id="mystery" class="mystery">
-        <div style="height: 100%, width: 100%;">
-            <input type="submit" value="X" class="x" onclick="mystery.close()">
-            <div  class="question">
-                <h1 id="question"></h1>
-            </div>
-            <div id="forma">
-                <input type="text" class="input" id="answer">
-                <input type="submit" value="Ok" class="button" onclick="mystery.check()">
-            </div>
+<body id="body" onload="Init(); CountDown();">
+  <div id="#kontejner">
+      <canvas id="gl-surface">
+            Najdite si dostojen browser, kot sta na primer Firefox ali Chrome!
+      </canvas>
+      <canvas id="t" width="45" height="25"></canvas>
+      <p id="paragraph"> </p>
+  </div>
+    <div>
+        <input type="submit" value="1. uganka" onclick="mistery = misteries[0]; mistery.open()" />
+        <input type="submit" value="2. uganka" onclick="mistery = misteries[1]; mistery.open()" />
+        <div id="mistery">
             <div>
-                <p id="correct"></p>
+                <input type="submit" value="X" class="x" onclick="mistery.close()" />
+                <div class="question">
+                    <h1 id="question"></h1>
+                </div>
+                <div id="forma">
+                    <input type="text" class="input" id="answer" />
+                    <input type="submit" value="Ok" class="button" onclick="mistery.check();" />
+                </div>
             </div>
+
         </div>
     </div>
-
-
 </body>
 </html>

@@ -342,7 +342,7 @@ LightMapDemoScene.prototype.Load = function (cb) {
 	me.lightDisplacementInputAngle = 0.0;
 
 	//Ustvarjanje ugank -- funkcija v GameLogic
-	initMysteries();
+	initMisteries();
 };
 
 LightMapDemoScene.prototype.Unload = function () {

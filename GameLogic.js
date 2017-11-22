@@ -1,15 +1,14 @@
 //LOGIC FOR THE GAME
 //============================
-//CLOCK
+var gamePassed=false;
 //URA
 var mins = 3;
 var sec = 0;
 var TextToDisplay;
 
-//Od�tevalnik
-var odstevalnik = setInterval(function CountDown()
+//Odstevalnik
+setInterval(function CountDown()
 {
-   
     if (sec == 0 && mins > 0)
     {
         mins--;
@@ -18,45 +17,42 @@ var odstevalnik = setInterval(function CountDown()
     }
     else if (sec > 0)
     {
-        sec--;
+        if(gamePassed)
+        {
 
-        if (sec == 0 && mins == 0) {
-            //maybe play sound....
-            TextToDisplay = "GAME OVER";
+           location.href="./game_passed.html";
+        }
+        sec--;
+        if (sec == 0 && mins == 0)
+        {
+            sec = 0;
+            var b = document.getElementById("paragraph");
+            if (b != null)
+                b.innerText = TextToDisplay;
+            location.href = "./game_over.html";
+           
         }
         else if (sec < 10)
             TextToDisplay = mins.toString() + ":0" + sec.toString();
         else
             TextToDisplay = mins.toString() + ":" + sec.toString();
-       
-    }    
-    var b = document.getElementById("t");
-    b.innerText = TextToDisplay;
-}, 1000);
-
-//Uganke
-var mysteries = [];
-var mystery;    //Za gumbe
-
-
-//Ustvari uganke
-var initMysteries = function(){
-    mysteries[0] = new Mystery("Predmet", "RGTI");
-    mysteries[1] = new Mystery("Deadline", "Petek");
-    //console.log(mysteries);
-}
-
-//Preveri če so vse uganke rešene
-var checkAll = function(){
-    for(var i = 0; i < mysteries.length; i++){
-        if (!mysteries[i].done){
-            return;
-        }
     }
-    clearInterval(odstevalnik);
-    TextToDisplay = "VICTORY";
-    var b = document.getElementById("t");
-    b.innerText = TextToDisplay;
-}
 
+    var b = document.getElementById("paragraph");
+    if (b!= null)
+        b.innerText = TextToDisplay;
+      /* 
+    var ctx_ = canvas.getContext("2d");
+    ctx_.fillStyle = "blue";
+    ctx_.font = "bold 16px Arial";
+    ctx_.fillText(TextToDisplay, (canvas.width / 2) - 17, (canvas.height / 2) + 8);*/
+
+
+}, 1000);
 //===========================================
+//Zaštartamo game over glasbo
+function PlaySound()
+{
+    var audio = document.getElementById("carteSoudCtrl");
+    audio.play();
+}
