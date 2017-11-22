@@ -40,7 +40,7 @@ var mystery;    //Za gumbe
 
 
 //Ustvari uganke
-var initmysteries = function(){
+var initMysteries = function(){
     mysteries[0] = new Mystery("Predmet", "RGTI");
     mysteries[1] = new Mystery("Deadline", "Petek");
     //console.log(mysteries);

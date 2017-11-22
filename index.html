@@ -10,7 +10,7 @@
                 z-index: 0;
 		    }
             p {color:white;}
-            .mistery {
+            .mystery {
                 display: none;
                 z-index: 20;
                 background-color: black;
@@ -90,19 +90,19 @@
 <!-- 
     Div za uganko
 -->
-<input type="submit" value="1. uganka" onclick="mistery=misteries[0]; mistery.open();">
-<input type="submit" value="2. uganka" onclick="mistery=misteries[1]; mistery.open();">
+<input type="submit" value="1. uganka" onclick="mystery=mysteries[0]; mystery.open();">
+<input type="submit" value="2. uganka" onclick="mystery=mysteries[1]; mystery.open();">
     <p id="t"></p>
 
-    <div id="mistery" class="mistery">
+    <div id="mystery" class="mystery">
         <div style="height: 100%, width: 100%;">
-            <input type="submit" value="X" class="x" onclick="mistery.close()">
+            <input type="submit" value="X" class="x" onclick="mystery.close()">
             <div  class="question">
                 <h1 id="question"></h1>
             </div>
             <div id="forma">
                 <input type="text" class="input" id="answer">
-                <input type="submit" value="Ok" class="button" onclick="mistery.check()">
+                <input type="submit" value="Ok" class="button" onclick="mystery.check()">
             </div>
             <div>
                 <p id="correct"></p>
