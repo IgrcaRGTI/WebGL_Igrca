@@ -168,3 +168,56 @@ Camera.prototype.moveRight = function (dist) {
 Camera.prototype.moveUp = function (dist) {
     vec3.scaleAndAdd(this.position, this.position, this.up, dist);
 };
+
+/*
+ -*
+ -*Deklaracija ugank
+ -*
+ -*/
+ var Mystery = function(question, correct){
+ 	this.question = question;	//Uganka
+ 	this.correct = correct;		//Pravilen odgovor
+ 	this.current = "";			//Trenuten odgovor
+ 	this.done = false;			//Stanje
+ }
+ 
+ Mystery.prototype.check = function() {
+ 	this.current = document.getElementById("answer").value;
+ 	var ok = document.getElementById("correct");
+ 	if(this.current === this.correct){
+ 		this.done = true;
+ 	}
+ 	if(this.done){
+ 		ok.style.color = "green";
+ 		ok.innerHTML = "Correct!";
+ 		checkAll();
+ 	}
+ 	else{
+ 		ok.style.color = "red";
+ 		ok.innerHTML = "Wrong!";
+ 	}
+ }
+ 
+ Mystery.prototype.open = function() {
+ 	document.getElementById("mystery").style.display = "block";
+ 	document.getElementById("question").innerHTML = this.question;
+ 	document.getElementById("answer").value = this.current;
+ 	if (Demo.__KeyDownWindowListener) {
+ 		RemoveEvent(window, 'keydown', Demo.__KeyDownWindowListener);
+ 	}
+ 	var ok = document.getElementById("correct");
+ 	if(this.done){
+ 		ok.style.color = "green";
+ 		ok.innerHTML = "Correct!";
+ 	}
+ 	else{
+ 		ok.innerHTML = "";
+ 	}
+ }
+ 
+ Mystery.prototype.close = function() {
+ 	document.getElementById("mystery").style.display = "none";
+ 	this.current = document.getElementById("answer").value;
+ 	AddEvent(window, 'keydown', Demo.__KeyDownWindowListener);
+ 
+ }

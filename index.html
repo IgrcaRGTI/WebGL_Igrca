@@ -18,14 +18,48 @@
                 background: rgba(215, 44, 44, 0);
             }
             #paragraph {display:none;}
+            .question {
+                 color: white;
+                 text-align: center;
+                 font-size: 4vh;
+             }
+             .input{
+                 margin-left: 5%;
+                 width: 70%;
+                 font-size: 4vh;
+             }
+             .button{
+                 width: 20%;
+                 font-size: 4vh;
+             }
+             .x{
+                 float: right;
+                 margin-right: 2%;
+             }
+             #correct{
+                 text-align: center;
+                 font-size: 4vh;
+             }
+            .mystery {
+                 display: none;
+                 z-index: 20;
+                 background-color: black;
+                 position:absolute;
+                 width: 50%;
+                 height: 40%;
+                 margin-left: auto;
+ 	            margin-right: auto;
+                 left: 0;
+ 	            right: 0;
+ 	            top: 30%;
+            }
       
       </style>
         <!-- Skripte bi imo bolje bilo imeti v headu     -->
 
         <script src="bower_components/async/dist/async.min.js" type="text/javascript"></script>
         <script src="bower_components/gl-matrix/dist/gl-matrix-min.js" type="text/javascript"></script>
-        <!--- collision detection-->
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r71/three.min.js" text="text/javascript"></script>
+  
         <script src="GameLogic.js" type="text/javascript"></script>
         <script src="Collision.js" type="text/javascript"></script>
         <script src="app.js" type="text/javascript"></script>
@@ -64,23 +98,28 @@
       </canvas>
       <canvas id="t" width="45" height="25"></canvas>
       <p id="paragraph"> </p>
+
   </div>
     <div>
-        <input type="submit" value="1. uganka" onclick="mistery = misteries[0]; mistery.open()" />
-        <input type="submit" value="2. uganka" onclick="mistery = misteries[1]; mistery.open()" />
-        <div id="mistery">
+        <input type="submit" value="1. uganka" onclick="mystery = mysteries[0]; mystery.open()" />
+        <input type="submit" value="2. uganka" onclick="mystery = mysteries[1]; mystery.open()" />
+
+    </div>        
+        <div id="mystery" class="mystery">
             <div>
-                <input type="submit" value="X" class="x" onclick="mistery.close()" />
+                <input type="submit" value="X" class="x" onclick="mystery.close()" />
                 <div class="question">
                     <h1 id="question"></h1>
                 </div>
                 <div id="forma">
                     <input type="text" class="input" id="answer" />
-                    <input type="submit" value="Ok" class="button" onclick="mistery.check();" />
+                    <input type="submit" value="Ok" class="button" onclick="mystery.check();" />
                 </div>
+                <div>
+                 <p id="correct"></p>
+             </div>
             </div>
 
         </div>
-    </div>
 </body>
 </html>

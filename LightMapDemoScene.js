@@ -1,11 +1,14 @@
 'use strict';
 
-
+var colliders = [];
 
 var LightMapDemoScene = function (gl) {
 	this.gl = gl;
 };
 
+function ReturnColliders() {
+    return colliders;
+}
 LightMapDemoScene.prototype.Load = function (cb) {
 
 
@@ -48,87 +51,39 @@ LightMapDemoScene.prototype.Load = function (cb) {
 *
 */
 		for (var i = 0; i < loadResults.Models.RoomModel.meshes.length; i++) {
-			var mesh = loadResults.Models.RoomModel.meshes[i];
-			switch (mesh.name) {
-				case 'MonkeyMesh':
-					me.MonkeyMesh = new Model(
-						me.gl,
-						mesh.vertices,
-						[].concat.apply([], mesh.faces),
-						mesh.normals,
-						vec4.fromValues(0.8, 0.8, 1.0, 1.0)
-					);
-					mat4.rotate(
-						me.MonkeyMesh.world, me.MonkeyMesh.world,
-						glMatrix.toRadian(94.87),
-						vec3.fromValues(0, 0, -1)
-					);
-					mat4.translate(
-						me.MonkeyMesh.world, me.MonkeyMesh.world,
-						vec4.fromValues(2.07919, -0.98559, 1.75740)
-					);
-					break;
-				case 'TableMesh':
-					me.TableMesh = new Model(
-						me.gl, mesh.vertices, [].concat.apply([], mesh.faces),
-						mesh.normals, vec4.fromValues(1, 0, 1, 1)
-					);
-					mat4.translate(
-						me.TableMesh.world, me.TableMesh.world,
-						vec3.fromValues(1.57116, -0.79374, 0.49672)
-					);
-					break;
-				case 'SofaMesh':
-					me.SofaMesh = new Model(
-						me.gl, mesh.vertices, [].concat.apply([], mesh.faces),
-						mesh.normals, vec4.fromValues(1, 0, 1, 1)
-					);
-					mat4.translate(
-						me.SofaMesh.world, me.SofaMesh.world,
-						vec3.fromValues(-3.28768, 0, 0.78448)
-					);
-					break;
-				case 'LightBulbMesh':
-					me.lightPosition = vec3.fromValues(0, 0.0, 2.98971);
-					me.LightMesh = new Model(
-						me.gl, mesh.vertices, [].concat.apply([], mesh.faces),
-						mesh.normals, vec4.fromValues(4, 4, 4, 1)
-					);
-					mat4.translate(me.LightMesh.world, me.LightMesh.world,
-						me.lightPosition
-					);
-					break;
-				case 'WallsMesh':
-					me.WallsMesh = new Model(
-						me.gl, mesh.vertices, [].concat.apply([], mesh.faces),
-						mesh.normals, vec4.fromValues(0.8, 0.8, 1.0, 1.0)
-					);
-					break;
-			}
-		}
+            var mesh = loadResults.Models.RoomModel.meshes[i];
+            //    console.log(mesh);
+            var model = new Model(me.gl, mesh.vertices, [].concat.apply([], mesh.faces), mesh.normals, vec4.fromValues(0.8, 0.8, 1.0, 1.0));
+          
+                    
 
-		if (!me.MonkeyMesh) {
-			cb('Failed to load monkey mesh'); return;
-		}
-		if (!me.TableMesh) {
-			cb('Failed to load table mesh'); return;
-		}
-		if (!me.SofaMesh) {
-			cb('Failed to load sofa mesh'); return;
-		}
-		if (!me.LightMesh) {
-			cb('Failed to load light mesh'); return;
-		}
-		if (!me.WallsMesh) {
-			cb('Failed to load walls mesh'); return;
-		}
-		me.Meshes = [
-			me.MonkeyMesh,
-			me.TableMesh,
-			me.SofaMesh,
-			me.LightMesh,
-			me.WallsMesh
-		];
+            mat4.rotate(model.world,
+                        model.world,
+                        glMatrix.toRadian(95,73884795),
+                        vec3.fromValues(1, 0, 0)
+            );
+           
+                    
+            /*mat4.translate(
+                model.world, model.world,
+				//vec4.fromValues(-0.200444, 8.34512, 7.8682));
+				vec4.fromValues(2.07919, -0.98559, 1.75740));
+          */
+				
+			}
+        
+       
+
+        if (!model) {
+            cb('Failed to load plane005'); return;
+        }
+        else if (model) {
+            console.log("hura model gre �ez nalaganje, rotacijo in translacijo");
+        }
+        me.Meshes = [
+           model
+		   ];
+        
 
 /*
 ** Ustvarjanje Shaderjov
@@ -233,8 +188,8 @@ LightMapDemoScene.prototype.Load = function (cb) {
 *
 */
 		me.camera = new Camera(
-			vec3.fromValues(4, 4, 1.85),
-			vec3.fromValues(-0.3, -1, 1.85),
+			vec3.fromValues(-1,-1,0.5),
+			vec3.fromValues(-0.3, -1, 0.5),
 			vec3.fromValues(0, 0, 1)
 		);
 
@@ -249,6 +204,7 @@ LightMapDemoScene.prototype.Load = function (cb) {
 			85.0
 		);
 
+		me.lightPosition = vec3.fromValues(4.07625, 1.00545, 5.90386);
 		me.shadowMapCameras = [
 /*
 * Pozitiven X
@@ -342,15 +298,15 @@ LightMapDemoScene.prototype.Load = function (cb) {
 	me.lightDisplacementInputAngle = 0.0;
 
 	//Ustvarjanje ugank -- funkcija v GameLogic
-	initMisteries();
+	initMysteries();
 };
 
 LightMapDemoScene.prototype.Unload = function () {
-	this.LightMesh = null;
-	this.MonkeyMesh = null;
-	this.TableMesh = null;
-	this.SofaMesh = null;
-	this.WallsMesh = null;
+  //  this.LightMesh = null;
+   this.Plane005 = null;
+//	this.TableMesh = null;
+	//this.SofaMesh = null;
+	//this.WallsMesh = null;
 
 	this.NoShadowProgram = null;
 	this.ShadowProgram = null;

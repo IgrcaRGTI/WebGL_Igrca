@@ -1,3 +1,8 @@
+var Collider = function (vertices)
+{
+    this.v = vertices;
+}
+
 
 function CanIMove(meshes,position,position, direction, dist)
 {
